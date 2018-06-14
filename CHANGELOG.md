@@ -1,5 +1,28 @@
 This CHANGELOG.md file will contain the update log for the latest set of updates to the templates
 
+
+# UPDATES for Master (Release 3.9) - May 22, 2018
+
+1.  Added parameter for CNS VM Size
+2.  Added support for non-HA masters by allowing a single master
+3.  Cleaned up Azure Cloud Provider configuration
+
+
+# UPDATES for Master (Release 3.9) - May 19, 2018
+
+1.  Updated scripts to support 3.9.27
+2.  Added Support for RHEL 7.5
+3.  Added Container Native Storage (CNS) support
+4.  Added support for custom IP range for the Virtual Network
+
+# UPDATES for Master (Release 3.9) - March 28, 2018
+
+1.  Create Release 3.9 Branch
+2.  Updating scripts for 3.9 repository
+3.  Switch to port 443 for web console
+4.  Remove old unused resources
+
+
 # UPDATES for Master (Release 3.7) - February 14, 2018
 
 1.  Created Release 3.7 Branch

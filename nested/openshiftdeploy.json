@@ -2,10 +2,10 @@
 	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
 	"contentVersion": "1.0.0.0",
 	"parameters": {
-		"_artifactsLocation": {
+		"location": {
 			"type": "string",
 			"metadata": {
-				"description": "Base URL for script location"
+				"description": "Datacenter Region Location"
 			}
 		},
 		"apiVersionCompute": {
@@ -74,6 +74,12 @@
 				"description": "OpenShift Node hostname"
 			}
 		},
+		"openshiftCnsHostname": {
+			"type": "string",
+			"metadata": {
+				"description": "OpenShift CNS Node hostname"
+			}
+		},
 		"masterInstanceCount": {
 			"type": "int",
 			"metadata": {
@@ -90,6 +96,12 @@
 			"type": "int",
 			"metadata": {
 				"description": "Number of OpenShift nodes"
+			}
+		},
+		"cnsInstanceCount": {
+			"type": "int",
+			"metadata": {
+				"description": "Number of CNS nodes"
 			}
 		},
 		"storageKind": {
@@ -110,6 +122,12 @@
 				"description": "Administrator password for OpenShift Console"
 			}
 		},
+		"enableCNS": {
+			"type": "string",
+			"metadata": {
+				"description": "Enable Container Native Storage: true or false"
+			}
+		},
 		"enableMetrics": {
 			"type": "string",
 			"metadata": {
@@ -120,12 +138,6 @@
 			"type": "string",
 			"metadata": {
 				"description": "Enable OpenShift Logging: true or false"
-			}
-		},
-		"enableCockpit": {
-			"type": "string",
-			"metadata": {
-				"description": "Enable Cockpit: true or false"
 			}
 		},
 		"enableAzure": {
@@ -169,24 +181,43 @@
 			"metadata": {
 				"description": "Red Hat Tags"
 			}
+		},
+		"virtualNetworkName": {
+			"type": "string",
+			"metadata": {
+				"description": "Name of the Virtual Network"
+			}
+		},
+		"nodeNetworkSecurityGroup": {
+			"type": "string",
+			"metadata": {
+				"description": "Name of Node Network Security Group"
+			}
+		},
+		"nodeAvailabilitySet": {
+			"type": "string",
+			"metadata": {
+				"description": "Name of Node Availability Set"
+			}
 		}
 	},
 	"variables": {
 		"singlequote": "'",
 		"tenantId": "[subscription().tenantId]",
 		"subscriptionId": "[subscription().subscriptionId]",
-		"location": "[resourceGroup().location]",
 		"resourceGroupName": "[resourceGroup().name]"
 	},
 	"resources": [{
 		"type": "Microsoft.Compute/virtualMachines/extensions",
 		"name": "[concat(parameters('openshiftBastionHostname'), '/deployOpenShift')]",
-		"location": "[resourceGroup().location]",
+		"location": "[parameters('location')]",
 		"apiVersion": "[parameters('apiVersionCompute')]",
 		"tags": {
 			"displayName": "DeployOpenShift",
 				"provider": "[parameters('redHatTags').provider]",
-				"app": "[parameters('redHatTags').app]"
+				"app": "[parameters('redHatTags').app]",
+				"version": "[parameters('redHatTags').version]",
+				"platform": "[parameters('redHatTags').platform]"
 		},
 		"properties": {
 			"publisher": "Microsoft.Azure.Extensions",
@@ -199,7 +230,7 @@
 				]
 			},
 			"protectedSettings": {
-				"commandToExecute": "[concat('bash ', parameters('openshiftDeploymentScriptFileName'), ' \"', parameters('adminUsername'), '\" ', variables('singlequote'), parameters('openshiftPassword'), variables('singlequote'), ' \"', parameters('openshiftMasterHostname'), '\" \"', parameters('openshiftMasterPublicIpFqdn'), '\" \"', parameters('openshiftMasterPublicIpAddress'), '\" \"', parameters('openshiftInfraHostname'), '\" \"', parameters('openshiftNodeHostname'), '\" \"', parameters('nodeInstanceCount'), '\" \"', parameters('infraInstanceCount'), '\" \"', parameters('MasterInstanceCount'), '\" \"', parameters(parameters('subDomainChosen')), '\" \"', parameters('newStorageAccountRegistry'), '\" ', variables('singlequote'), parameters('newStorageAccountKey'), variables('singlequote'), ' \"', parameters('enableMetrics'), '\" \"', parameters('enableLogging'), '\" ', variables('singlequote'), variables('tenantId'), variables('singlequote'), ' ', variables('singlequote'), variables('subscriptionId'), variables('singlequote'), ' ', variables('singlequote'), parameters('aadClientId'), variables('singlequote'), ' ', variables('singlequote'), parameters('aadClientSecret'), variables('singlequote'), ' ', variables('singlequote'), variables('resourceGroupName'), variables('singlequote'), ' ', variables('singlequote'), variables('location'), variables('singlequote'), ' ', variables('singlequote'), parameters('enableCockpit'), variables('singlequote'), ' ', variables('singlequote'), parameters('enableAzure'), variables('singlequote'), ' ', variables('singlequote'), parameters('storageKind'), variables('singlequote'))]"
+				"commandToExecute": "[concat('bash ', parameters('openshiftDeploymentScriptFileName'), ' \"', parameters('adminUsername'), '\" ', variables('singlequote'), parameters('openshiftPassword'), variables('singlequote'), ' \"', parameters('openshiftMasterHostname'), '\" \"', parameters('openshiftMasterPublicIpFqdn'), '\" \"', parameters('openshiftMasterPublicIpAddress'), '\" \"', parameters('openshiftInfraHostname'), '\" \"', parameters('openshiftNodeHostname'), '\" \"', parameters('nodeInstanceCount'), '\" \"', parameters('infraInstanceCount'), '\" \"', parameters('MasterInstanceCount'), '\" \"', parameters(parameters('subDomainChosen')), '\" \"', parameters('newStorageAccountRegistry'), '\" ', variables('singlequote'), parameters('newStorageAccountKey'), variables('singlequote'), ' \"', parameters('enableMetrics'), '\" \"', parameters('enableLogging'), '\" ', variables('singlequote'), variables('tenantId'), variables('singlequote'), ' ', variables('singlequote'), variables('subscriptionId'), variables('singlequote'), ' ', variables('singlequote'), parameters('aadClientId'), variables('singlequote'), ' ', variables('singlequote'), parameters('aadClientSecret'), variables('singlequote'), ' ', variables('singlequote'), variables('resourceGroupName'), variables('singlequote'), ' ', variables('singlequote'), parameters('location'), variables('singlequote'), ' ', variables('singlequote'), parameters('enableAzure'), variables('singlequote'), ' ', variables('singlequote'), parameters('storageKind'), variables('singlequote'), ' ', variables('singlequote'), parameters('enableCNS'), variables('singlequote'), ' ', variables('singlequote'), parameters('openshiftCnsHostname'), variables('singlequote'),' ', variables('singlequote'), parameters('cnsInstanceCount'), variables('singlequote'), ' ', variables('singlequote'), parameters('virtualNetworkName'), variables('singlequote'), ' ', variables('singlequote'), parameters('nodeNetworkSecurityGroup'), variables('singlequote'), ' ', variables('singlequote'), parameters('nodeAvailabilitySet'), variables('singlequote'))]"
 			}
 		}
 	}],
